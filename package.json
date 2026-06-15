@@ -1,0 +1,34 @@
+{
+  "name": "skillcheck",
+  "version": "0.1.0",
+  "description": "Local-first lint checks for agent SKILL.md files.",
+  "type": "module",
+  "bin": {
+    "skillcheck": "./bin/skillcheck.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/index.js && node --check bin/skillcheck.js",
+    "smoke": "node bin/skillcheck.js test/fixtures/pass/SKILL.md",
+    "validate": "bash scripts/validate.sh"
+  },
+  "keywords": [
+    "agents",
+    "skills",
+    "lint",
+    "safety",
+    "cli"
+  ],
+  "author": "Roger Chappel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "SKILL.md",
+    "README.md"
+  ]
+}
