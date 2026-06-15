@@ -21,3 +21,9 @@ npm run check
 npm run smoke
 npm run validate
 ```
+
+## Reviewer Checklist
+
+- Confirm the CLI stays read-only for normal use.
+- Confirm failing reports exit nonzero for automation.
+- Confirm JSON output includes enough detail for downstream skill packaging checks.
