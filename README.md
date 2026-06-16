@@ -37,3 +37,15 @@ The tool only reads local files and prints reports. It does not install skills, 
 ## Limitations
 
 The current checks are deterministic heuristics. They are meant to make review faster, not replace human judgment.
+
+## Verification
+
+```bash
+npm run check
+npm test
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
+
+Use `npm run release:check` before publishing or opening a release PR.
