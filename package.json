@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Local-first lint checks for agent SKILL.md files.",
   "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "bin": {
     "skillcheck": "./bin/skillcheck.js"
   },
@@ -39,6 +43,9 @@
     "src",
     "docs",
     "SKILL.md",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "CONTRIBUTING.md"
   ]
 }
