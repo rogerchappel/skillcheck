@@ -23,12 +23,14 @@ async function main(argv) {
       const raw = argv[index + 1];
       index += 1;
       minScore = Number.parseInt(raw, 10);
-      if (!Number.isFinite(minScore)) {
-        throw new Error("--min-score expects an integer");
+      if (!/^\d+$/.test(raw ?? "") || minScore < 0 || minScore > 100) {
+        throw new Error("--min-score expects an integer from 0 to 100");
       }
     } else if (arg === "--help" || arg === "-h") {
       console.log(usage());
       return 0;
+    } else if (arg.startsWith("-")) {
+      throw new Error(`unknown option: ${arg}`);
     } else {
       paths.push(arg);
     }
