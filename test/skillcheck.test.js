@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { auditSkillMarkdown, formatTextReport } from "../src/index.js";
 
 test("passes a complete skill with safety and validation coverage", async () => {
@@ -29,4 +30,27 @@ test("formats text output for CLI users", async () => {
   const text = formatTextReport(auditSkillMarkdown(markdown, { path: "SKILL.md" }));
   assert.match(text, /^PASS SKILL\.md/);
   assert.match(text, /no findings/);
+});
+
+test("CLI rejects unknown options instead of treating them as paths", () => {
+  const result = spawnSync(process.execPath, ["bin/skillcheck.js", "--jsoon"], {
+    cwd: new URL("..", import.meta.url),
+    encoding: "utf8"
+  });
+
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /unknown option: --jsoon/);
+  assert.doesNotMatch(result.stderr, /ENOENT/);
+});
+
+test("CLI rejects thresholds outside the score range", () => {
+  for (const threshold of ["-1", "101", "80oops"]) {
+    const result = spawnSync(process.execPath, ["bin/skillcheck.js", "--min-score", threshold, "SKILL.md"], {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    });
+
+    assert.equal(result.status, 2, threshold);
+    assert.match(result.stderr, /integer from 0 to 100/, threshold);
+  }
 });
