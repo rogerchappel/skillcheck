@@ -22,6 +22,21 @@ node bin/skillcheck.js --json --min-score 90 SKILL.md
 - External write language without approval requirements.
 - Risky workflow language without local-first or dry-run boundaries.
 
+## Deterministic Rules
+
+Coverage is awarded only for a non-empty Markdown section whose heading matches
+one of the supported names. ATX headings (`## Inputs`) and setext headings
+(`Inputs` followed by `------`) are recognized at any heading level. Common
+heading variants include Triggers, Requirements, Dependencies, External
+Actions, Permission, Example, Verification, and Non-Goals. Keywords in ordinary
+paragraphs and fenced code blocks do not create section coverage.
+
+Risk checks inspect prose outside fenced code blocks. A line that explicitly
+prohibits an action (`does not publish`, `never modify`) or marks it read-only or
+local-only is treated as a boundary, not affirmative external behavior.
+Affirmative external actions, including posting to named services, still
+require approval and dry-run or local-first language.
+
 ## Library API
 
 ```js
@@ -36,7 +51,10 @@ The tool only reads local files and prints reports. It does not install skills, 
 
 ## Limitations
 
-The current checks are deterministic heuristics. They are meant to make review faster, not replace human judgment.
+The current checks are deterministic heuristics. Heading aliases outside the
+documented vocabulary are not inferred, and nuanced prose that combines a
+prohibition with a contrasting clause may still need human review. The checks
+are meant to make review faster, not replace human judgment.
 
 ## Verification
 

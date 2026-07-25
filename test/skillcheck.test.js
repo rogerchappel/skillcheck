@@ -25,6 +25,74 @@ test("flags risky external actions without approval language", () => {
   assert.ok(report.findings.some((finding) => finding.rule === "risk-approval"));
 });
 
+test("does not count incidental keywords as operational sections", async () => {
+  const markdown = await readFile(
+    new URL("./fixtures/fail/keyword-probe.md", import.meta.url),
+    "utf8"
+  );
+  const report = auditSkillMarkdown(markdown);
+
+  assert.equal(report.score, 0);
+  assert.equal(report.passed, false);
+  assert.ok(report.findings.some((finding) => finding.rule === "when-to-use"));
+  assert.ok(report.findings.some((finding) => finding.rule === "approval"));
+});
+
+test("recognizes ATX and setext heading variants without treating prohibitions as risks", async () => {
+  const markdown = await readFile(
+    new URL("./fixtures/pass/boundary-headings.md", import.meta.url),
+    "utf8"
+  );
+  const report = auditSkillMarkdown(markdown);
+
+  assert.equal(report.score, 100);
+  assert.equal(report.passed, true);
+  assert.equal(report.findings.length, 0);
+});
+
+test("still detects affirmative external actions in structured sections", () => {
+  const markdown = [
+    "## External Actions",
+    "Post updates to Slack and GitHub.",
+    "",
+    "## Limitations",
+    "Do not delete local files."
+  ].join("\n");
+  const report = auditSkillMarkdown(markdown);
+
+  assert.ok(report.findings.some((finding) => finding.rule === "risk-approval"));
+});
+
+test("CLI rejects a keyword-only document with missing-section findings", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "test/fixtures/fail/keyword-probe.md"],
+    {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /^FAIL .* score=0\/80/m);
+  assert.match(result.stdout, /Missing coverage for When to use/);
+});
+
+test("CLI accepts explicit safe boundaries under recognized heading variants", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "test/fixtures/pass/boundary-headings.md"],
+    {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /^PASS .* score=100\/80/m);
+  assert.match(result.stdout, /no findings/);
+});
+
 test("formats text output for CLI users", async () => {
   const markdown = await readFile(new URL("./fixtures/pass/SKILL.md", import.meta.url), "utf8");
   const text = formatTextReport(auditSkillMarkdown(markdown, { path: "SKILL.md" }));
