@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Base coverage scoring on non-empty Markdown sections instead of document-wide
+  keyword matches, and distinguish explicit safe boundaries from affirmative
+  external actions in risk checks.
+- Add library and CLI regressions for keyword-only documents, heading variants,
+  negated actions, and affirmative posts to named services.
 - Replace the raw package dry-run with a deterministic package smoke script that
   asserts the CLI, library, skill file, release notes, license, and security
   policy are present in the packed tarball.
