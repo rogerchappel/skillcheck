@@ -3,63 +3,69 @@ const REQUIRED_COVERAGE = [
     id: "when-to-use",
     label: "When to use",
     weight: 15,
-    patterns: [/when to use/i, /use this skill/i, /trigger/i]
+    patterns: [/\bwhen to use\b/i, /\btriggers?\b/i]
   },
   {
     id: "inputs",
     label: "Required inputs",
     weight: 10,
-    patterns: [/inputs?/i, /requires?/i, /prerequisites?/i]
+    patterns: [/\binputs?\b/i, /\brequirements?\b/i, /\bprerequisites?\b/i]
   },
   {
     id: "tools",
     label: "Required tools",
     weight: 10,
-    patterns: [/tools?/i, /commands?/i, /dependencies?/i]
+    patterns: [/\btools?\b/i, /\bcommands?\b/i, /\bdependencies\b/i]
   },
   {
     id: "side-effects",
     label: "Side-effect boundaries",
     weight: 15,
-    patterns: [/side[- ]effects?/i, /write/i, /external actions?/i, /network/i]
+    patterns: [/\bside[- ]effects?\b/i, /\bsafety boundaries?\b/i, /\bexternal actions?\b/i]
   },
   {
     id: "approval",
     label: "Approval requirements",
     weight: 15,
-    patterns: [/approval/i, /confirm/i, /permission/i]
+    patterns: [/\bapprovals?\b/i, /\bconfirmation\b/i, /\bpermissions?\b/i]
   },
   {
     id: "examples",
     label: "Examples",
     weight: 15,
-    patterns: [/examples?/i, /```/]
+    patterns: [/\bexamples?\b/i, /\busage examples?\b/i]
   },
   {
     id: "validation",
     label: "Validation workflow",
     weight: 15,
-    patterns: [/validat/i, /verif/i, /tests?/i, /smoke/i]
+    patterns: [/\bvalidation\b/i, /\bverification\b/i, /\btesting\b/i]
   },
   {
     id: "limitations",
     label: "Limitations",
     weight: 5,
-    patterns: [/limitations?/i, /non-goals?/i, /do not/i]
+    patterns: [/\blimitations?\b/i, /\bnon-goals?\b/i, /\bout of scope\b/i]
   }
 ];
 
-const RISK_TERMS = [
-  { term: "credential", pattern: /credentials?|secrets?|tokens?/i },
-  { term: "external write", pattern: /send|publish|post|upload|delete|write|modify/i },
-  { term: "live account", pattern: /account|crm|slack|github|notion|salesforce|linear/i }
-];
+const EXTERNAL_ACTION = /\b(?:send|publish|post|upload|delete|write|modify|access)\b/i;
+const LIVE_ACCOUNT = /\b(?:accounts?|crm|slack|github|notion|salesforce|linear)\b/i;
+const CREDENTIAL = /\b(?:credentials?|secrets?|tokens?)\b/i;
+const PROHIBITION =
+  /\b(?:do|does|will|must|should|can|may)\s+not\b|\bnever\b|\b(?:read|local)[- ]only\b/i;
+const CONTRAST = /\b(?:but|however|except)\b/i;
 
 export function auditSkillMarkdown(markdown, options = {}) {
   const minScore = options.minScore ?? 80;
   const normalized = markdown.trim();
+  const sections = parseMarkdownSections(normalized);
   const sectionHits = REQUIRED_COVERAGE.map((rule) => {
-    const matched = rule.patterns.some((pattern) => pattern.test(normalized));
+    const matched = sections.some(
+      (section) =>
+        section.content.length > 0 &&
+        rule.patterns.some((pattern) => pattern.test(section.heading))
+    );
     return { ...rule, matched };
   });
   const score = sectionHits
@@ -94,8 +100,60 @@ export function auditSkillMarkdown(markdown, options = {}) {
   };
 }
 
+function parseMarkdownSections(markdown) {
+  const lines = markdown.split(/\r?\n/);
+  const sections = [];
+  let current = null;
+  let inFence = false;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (/^\s*(```|~~~)/.test(line)) {
+      inFence = !inFence;
+      if (current) current.content.push(line);
+      continue;
+    }
+    if (inFence) {
+      if (current) current.content.push(line);
+      continue;
+    }
+
+    const atx = line.match(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/);
+    const setext =
+      index + 1 < lines.length && /^\s{0,3}(?:=+|-+)\s*$/.test(lines[index + 1])
+        ? line.trim()
+        : null;
+    const heading = atx?.[1]?.trim() ?? setext;
+
+    if (heading) {
+      current = { heading, content: [] };
+      sections.push(current);
+      if (setext) index += 1;
+    } else if (current) {
+      current.content.push(line);
+    }
+  }
+
+  return sections.map((section) => ({
+    heading: section.heading,
+    content: section.content.join("\n").trim()
+  }));
+}
+
 function detectRisks(markdown) {
-  const riskTerms = RISK_TERMS.filter((risk) => risk.pattern.test(markdown));
+  const actionableProse = markdown
+    .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, "")
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s{0,3}#{1,6}\s+/, "").trim())
+    .filter(Boolean)
+    .filter((line) => !PROHIBITION.test(line) || CONTRAST.test(line))
+    .join("\n");
+  const hasExternalAction = EXTERNAL_ACTION.test(actionableProse);
+  const riskTerms = [
+    ...(CREDENTIAL.test(actionableProse) ? [{ term: "credential" }] : []),
+    ...(hasExternalAction ? [{ term: "external write" }] : []),
+    ...(hasExternalAction && LIVE_ACCOUNT.test(actionableProse) ? [{ term: "live account" }] : [])
+  ];
   if (riskTerms.length === 0) {
     return [];
   }
