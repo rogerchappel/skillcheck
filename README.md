@@ -35,7 +35,9 @@ Risk checks inspect prose outside fenced code blocks. A line that explicitly
 prohibits an action (`does not publish`, `never modify`) or marks it read-only or
 local-only is treated as a boundary, not affirmative external behavior.
 Affirmative external actions, including posting to named services, still
-require approval and dry-run or local-first language.
+require affirmative approval language such as “ask the user before publishing,”
+plus dry-run or local-first language. Waivers such as “no approval is required”
+and “publish without asking the user” do not satisfy the approval risk check.
 
 ## Library API
 
