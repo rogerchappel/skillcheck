@@ -25,6 +25,36 @@ test("flags risky external actions without approval language", () => {
   assert.ok(report.findings.some((finding) => finding.rule === "risk-approval"));
 });
 
+test("distinguishes affirmative, missing, and negated approval requirements", () => {
+  const cases = [
+    {
+      wording: "Ask the user for approval before publishing the file to GitHub.",
+      flagged: false
+    },
+    {
+      wording: "Publish the file to GitHub.",
+      flagged: true
+    },
+    {
+      wording: "Publish the file to GitHub. No approval is required.",
+      flagged: true
+    },
+    {
+      wording: "Publish the file to GitHub without asking the user for permission.",
+      flagged: true
+    }
+  ];
+
+  for (const { wording, flagged } of cases) {
+    const report = auditSkillMarkdown(wording);
+    assert.equal(
+      report.findings.some((finding) => finding.rule === "risk-approval"),
+      flagged,
+      wording
+    );
+  }
+});
+
 test("does not count incidental keywords as operational sections", async () => {
   const markdown = await readFile(
     new URL("./fixtures/fail/keyword-probe.md", import.meta.url),
@@ -91,6 +121,21 @@ test("CLI accepts explicit safe boundaries under recognized heading variants", (
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /^PASS .* score=100\/80/m);
   assert.match(result.stdout, /no findings/);
+});
+
+test("CLI rejects external publishing with a negated approval requirement", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "test/fixtures/fail/negated-approval.md"],
+    {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^FAIL .* score=100\/80/m);
+  assert.match(result.stdout, /ERROR risk-approval/);
 });
 
 test("formats text output for CLI users", async () => {
