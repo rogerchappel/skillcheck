@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Require affirmative user-approval language for risky external actions instead
+  of accepting negated or waived approval statements.
 - Base coverage scoring on non-empty Markdown sections instead of document-wide
   keyword matches, and distinguish explicit safe boundaries from affirmative
   external actions in risk checks.

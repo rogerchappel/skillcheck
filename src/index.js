@@ -55,6 +55,14 @@ const CREDENTIAL = /\b(?:credentials?|secrets?|tokens?)\b/i;
 const PROHIBITION =
   /\b(?:do|does|will|must|should|can|may)\s+not\b|\bnever\b|\b(?:read|local)[- ]only\b/i;
 const CONTRAST = /\b(?:but|however|except)\b/i;
+const APPROVAL_NEGATION =
+  /\bno\s+(?:user\s+)?(?:approval|confirmation|permission)\b|\b(?:approval|confirmation|permission)\s+(?:is\s+)?not\s+(?:needed|required)\b|\bwithout\s+(?:asking|obtaining|requesting|receiving|seeking)?\s*(?:the\s+)?(?:user(?:'s)?\s+)?(?:approval|confirmation|permission)\b|\b(?:do|does|must|should|need)\s+not\s+(?:ask|confirm|obtain|request|seek)\b/i;
+const AFFIRMATIVE_APPROVAL = [
+  /\bask\s+(?:the\s+)?user\b[^.!?\n]*\b(?:approval|confirmation|permission|before)\b/i,
+  /\bconfirm\s+with\s+(?:the\s+)?user\b/i,
+  /\b(?:obtain|request|receive|seek|get|require|need)\b[^.!?\n]*\b(?:user\s+)?(?:approval|confirmation|permission)\b/i,
+  /\b(?:approval|confirmation|permission)\b[^.!?\n]*\b(?:is\s+)?(?:needed|required|must\s+be\s+(?:obtained|received))\b/i
+];
 
 export function auditSkillMarkdown(markdown, options = {}) {
   const minScore = options.minScore ?? 80;
@@ -158,7 +166,7 @@ function detectRisks(markdown) {
     return [];
   }
 
-  const hasApproval = /approval|confirm|permission|ask the user/i.test(markdown);
+  const hasApproval = hasAffirmativeApproval(markdown);
   const hasDryRun = /dry[- ]run|preview|plan only|local[- ]first/i.test(markdown);
   const findings = [];
 
@@ -179,6 +187,22 @@ function detectRisks(markdown) {
   }
 
   return findings;
+}
+
+function hasAffirmativeApproval(markdown) {
+  const prose = markdown
+    .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, "")
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s{0,3}#{1,6}\s+/, "").trim())
+    .filter(Boolean)
+    .join("\n");
+  const clauses = prose.split(/[.!?\n]+/).map((clause) => clause.trim());
+
+  return clauses.some(
+    (clause) =>
+      !APPROVAL_NEGATION.test(clause) &&
+      AFFIRMATIVE_APPROVAL.some((pattern) => pattern.test(clause))
+  );
 }
 
 export function formatTextReport(report) {
