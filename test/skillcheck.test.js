@@ -93,6 +93,45 @@ test("still detects affirmative external actions in structured sections", () => 
   assert.ok(report.findings.some((finding) => finding.rule === "risk-approval"));
 });
 
+test("ignores headings and risk keywords inside longer backtick fences", () => {
+  const markdown = [
+    "````markdown",
+    "## Approval",
+    "Post updates to Slack.",
+    "```",
+    "## Validation",
+    "Preview changes locally.",
+    "````",
+    "Genuine prose remains visible."
+  ].join("\n");
+  const report = auditSkillMarkdown(markdown);
+
+  assert.equal(report.score, 0);
+  assert.equal(report.findings.some((finding) => finding.rule === "risk-approval"), false);
+  assert.equal(report.findings.some((finding) => finding.rule === "risk-dry-run"), false);
+});
+
+test("only a same-marker fence of sufficient length closes a fenced block", () => {
+  const markdown = [
+    "~~~~text",
+    "## Approval",
+    "Upload credentials to GitHub.",
+    "```",
+    "### Validation",
+    "Ask the user for approval, then preview and post to Slack.",
+    "~~~",
+    "## Examples",
+    "Publish to Notion.",
+    "~~~~",
+    "Post to Slack from genuine prose."
+  ].join("\n");
+  const report = auditSkillMarkdown(markdown);
+
+  assert.equal(report.score, 0);
+  assert.ok(report.findings.some((finding) => finding.rule === "risk-approval"));
+  assert.ok(report.findings.some((finding) => finding.rule === "risk-dry-run"));
+});
+
 test("CLI rejects a keyword-only document with missing-section findings", () => {
   const result = spawnSync(
     process.execPath,
