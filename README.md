@@ -31,9 +31,11 @@ heading variants include Triggers, Requirements, Dependencies, External
 Actions, Permission, Example, Verification, and Non-Goals. Keywords in ordinary
 paragraphs and fenced code blocks do not create section coverage.
 
-Risk checks inspect prose outside fenced code blocks. A line that explicitly
-prohibits an action (`does not publish`, `never modify`) or marks it read-only or
-local-only is treated as a boundary, not affirmative external behavior.
+Risk checks inspect prose outside fenced code blocks. Closing fences must use
+the opening marker and be at least as long, following Markdown fence rules. A
+line that explicitly prohibits an action (`does not publish`, `never modify`) or
+marks it read-only or local-only is treated as a boundary, not affirmative
+external behavior.
 Affirmative external actions, including posting to named services, still
 require affirmative approval language such as “ask the user before publishing,”
 plus dry-run or local-first language. Waivers such as “no approval is required”
