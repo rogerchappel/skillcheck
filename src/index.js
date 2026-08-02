@@ -112,16 +112,17 @@ function parseMarkdownSections(markdown) {
   const lines = markdown.split(/\r?\n/);
   const sections = [];
   let current = null;
-  let inFence = false;
+  let fence = null;
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
-    if (/^\s*(```|~~~)/.test(line)) {
-      inFence = !inFence;
+    const nextFence = matchFence(line, fence);
+    if (nextFence.matched) {
+      fence = nextFence.fence;
       if (current) current.content.push(line);
       continue;
     }
-    if (inFence) {
+    if (fence) {
       if (current) current.content.push(line);
       continue;
     }
@@ -148,9 +149,42 @@ function parseMarkdownSections(markdown) {
   }));
 }
 
+function matchFence(line, fence) {
+  if (fence) {
+    const closing = line.match(/^ {0,3}(`+|~+)\s*$/);
+    const closes =
+      closing && closing[1][0] === fence.marker && closing[1].length >= fence.length;
+    return { matched: Boolean(closes), fence: closes ? null : fence };
+  }
+
+  const opening = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+  if (!opening || (opening[1][0] === "`" && opening[2].includes("`"))) {
+    return { matched: false, fence: null };
+  }
+  return {
+    matched: true,
+    fence: { marker: opening[1][0], length: opening[1].length }
+  };
+}
+
+function proseOutsideFences(markdown) {
+  const prose = [];
+  let fence = null;
+
+  for (const line of markdown.split(/\r?\n/)) {
+    const nextFence = matchFence(line, fence);
+    if (nextFence.matched) {
+      fence = nextFence.fence;
+    } else if (!fence) {
+      prose.push(line);
+    }
+  }
+  return prose.join("\n");
+}
+
 function detectRisks(markdown) {
-  const actionableProse = markdown
-    .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, "")
+  const prose = proseOutsideFences(markdown);
+  const actionableProse = prose
     .split(/\r?\n/)
     .map((line) => line.replace(/^\s{0,3}#{1,6}\s+/, "").trim())
     .filter(Boolean)
@@ -166,8 +200,8 @@ function detectRisks(markdown) {
     return [];
   }
 
-  const hasApproval = hasAffirmativeApproval(markdown);
-  const hasDryRun = /dry[- ]run|preview|plan only|local[- ]first/i.test(markdown);
+  const hasApproval = hasAffirmativeApproval(prose);
+  const hasDryRun = /dry[- ]run|preview|plan only|local[- ]first/i.test(prose);
   const findings = [];
 
   if (!hasApproval) {
@@ -190,8 +224,7 @@ function detectRisks(markdown) {
 }
 
 function hasAffirmativeApproval(markdown) {
-  const prose = markdown
-    .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, "")
+  const prose = proseOutsideFences(markdown)
     .split(/\r?\n/)
     .map((line) => line.replace(/^\s{0,3}#{1,6}\s+/, "").trim())
     .filter(Boolean)
