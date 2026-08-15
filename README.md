@@ -33,13 +33,15 @@ paragraphs and fenced code blocks do not create section coverage.
 
 Risk checks inspect prose outside fenced code blocks. Closing fences must use
 the opening marker and be at least as long, following Markdown fence rules. A
-line that explicitly prohibits an action (`does not publish`, `never modify`) or
-marks it read-only or local-only is treated as a boundary, not affirmative
-external behavior.
-Affirmative external actions, including posting to named services, still
-require affirmative approval language such as “ask the user before publishing,”
-plus dry-run or local-first language. Waivers such as “no approval is required”
-and “publish without asking the user” do not satisfy the approval risk check.
+clause that explicitly prohibits an action (`does not publish`, `never modify`)
+or marks it read-only or local-only is treated as a boundary, not affirmative
+external behavior. In mixed statements, punctuation, explicit contrasts, and
+independent action clauses are evaluated separately, so `does not modify local
+files and posts updates to Slack` still identifies the Slack post.
+Affirmative external actions, including posting to named services, require
+affirmative approval language such as “ask the user before publishing,” plus
+dry-run or local-first language. Waivers such as “no approval is required” and
+“publish without asking the user” do not satisfy the approval risk check.
 
 ## Library API
 
@@ -56,9 +58,9 @@ The tool only reads local files and prints reports. It does not install skills, 
 ## Limitations
 
 The current checks are deterministic heuristics. Heading aliases outside the
-documented vocabulary are not inferred, and nuanced prose that combines a
-prohibition with a contrasting clause may still need human review. The checks
-are meant to make review faster, not replace human judgment.
+documented vocabulary are not inferred, and unusually structured or ambiguous
+prose may still need human review. The checks are meant to make review faster,
+not replace human judgment.
 
 ## Verification
 
