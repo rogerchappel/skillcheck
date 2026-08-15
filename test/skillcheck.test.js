@@ -93,6 +93,37 @@ test("still detects affirmative external actions in structured sections", () => 
   assert.ok(report.findings.some((finding) => finding.rule === "risk-approval"));
 });
 
+test("distinguishes prohibited and affirmative actions in mixed prose", () => {
+  const risky = [
+    "This skill does not modify local files and posts updates to Slack.",
+    "This skill never writes locally; it uploads the report to GitHub.",
+    "This skill is read-only, then publishes a summary to Notion.",
+    "This skill does not delete local files, but sends updates to Linear."
+  ];
+  const boundaries = [
+    "This skill does not modify local files.",
+    "This skill does not modify local files or post updates to Slack.",
+    "This skill never writes, publishes, or uploads to GitHub.",
+    "This skill is read-only and local-only."
+  ];
+
+  for (const wording of risky) {
+    const report = auditSkillMarkdown(wording);
+    assert.ok(
+      report.findings.some((finding) => finding.rule === "risk-approval"),
+      wording
+    );
+  }
+  for (const wording of boundaries) {
+    const report = auditSkillMarkdown(wording);
+    assert.equal(
+      report.findings.some((finding) => finding.rule === "risk-approval"),
+      false,
+      wording
+    );
+  }
+});
+
 test("ignores headings and risk keywords inside longer backtick fences", () => {
   const markdown = [
     "````markdown",
@@ -174,6 +205,22 @@ test("CLI rejects external publishing with a negated approval requirement", () =
 
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /^FAIL .* score=100\/80/m);
+  assert.match(result.stdout, /ERROR risk-approval/);
+});
+
+test("CLI rejects an affirmative action following a prohibition", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "test/fixtures/fail/mixed-prohibition.md"],
+    {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^FAIL .* score=100\/80/m);
+  assert.match(result.stdout, /Potential external write, live account behavior/);
   assert.match(result.stdout, /ERROR risk-approval/);
 });
 
