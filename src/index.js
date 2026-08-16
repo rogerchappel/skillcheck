@@ -49,12 +49,14 @@ const REQUIRED_COVERAGE = [
   }
 ];
 
-const EXTERNAL_ACTION = /\b(?:send|publish|post|upload|delete|write|modify|access)\b/i;
+const EXTERNAL_ACTION =
+  /\b(?:send(?:s)?|publish(?:es)?|post(?:s)?|upload(?:s)?|delete(?:s)?|write(?:s)?|modify|modifies|access(?:es)?)\b/i;
 const LIVE_ACCOUNT = /\b(?:accounts?|crm|slack|github|notion|salesforce|linear)\b/i;
 const CREDENTIAL = /\b(?:credentials?|secrets?|tokens?)\b/i;
 const PROHIBITION =
   /\b(?:do|does|will|must|should|can|may)\s+not\b|\bnever\b|\b(?:read|local)[- ]only\b/i;
-const CONTRAST = /\b(?:but|however|except)\b/i;
+const INDEPENDENT_ACTION_CLAUSE =
+  /\band\s+(?=(?:then\s+)?(?:(?:it|this skill|the skill|the tool|we|you)\s+)?(?:sends|publishes|posts|uploads|deletes|writes|modifies|accesses)\b)|\bor\s+(?=(?:then\s+(?:(?:it|this skill|the skill|the tool|we|you)\s+)?|(?:it|this skill|the skill|the tool|we|you)\s+)(?:sends|publishes|posts|uploads|deletes|writes|modifies|accesses)\b)/i;
 const APPROVAL_NEGATION =
   /\bno\s+(?:user\s+)?(?:approval|confirmation|permission)\b|\b(?:approval|confirmation|permission)\s+(?:is\s+)?not\s+(?:needed|required)\b|\bwithout\s+(?:asking|obtaining|requesting|receiving|seeking)?\s*(?:the\s+)?(?:user(?:'s)?\s+)?(?:approval|confirmation|permission)\b|\b(?:do|does|must|should|need)\s+not\s+(?:ask|confirm|obtain|request|seek)\b/i;
 const AFFIRMATIVE_APPROVAL = [
@@ -188,7 +190,8 @@ function detectRisks(markdown) {
     .split(/\r?\n/)
     .map((line) => line.replace(/^\s{0,3}#{1,6}\s+/, "").trim())
     .filter(Boolean)
-    .filter((line) => !PROHIBITION.test(line) || CONTRAST.test(line))
+    .flatMap(splitRiskClauses)
+    .filter((clause) => !PROHIBITION.test(clause))
     .join("\n");
   const hasExternalAction = EXTERNAL_ACTION.test(actionableProse);
   const riskTerms = [
@@ -221,6 +224,14 @@ function detectRisks(markdown) {
   }
 
   return findings;
+}
+
+function splitRiskClauses(line) {
+  return line
+    .split(/[.!?;:]+|\b(?:but|however|except)\b|,\s*(?=then\b)/i)
+    .flatMap((clause) => clause.split(INDEPENDENT_ACTION_CLAUSE))
+    .map((clause) => clause.trim())
+    .filter(Boolean);
 }
 
 function hasAffirmativeApproval(markdown) {
