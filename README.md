@@ -29,7 +29,10 @@ one of the supported names. ATX headings (`## Inputs`) and setext headings
 (`Inputs` followed by `------`) are recognized at any heading level. Common
 heading variants include Triggers, Requirements, Dependencies, External
 Actions, Permission, Example, Verification, and Non-Goals. Keywords in ordinary
-paragraphs and fenced code blocks do not create section coverage.
+paragraphs and fenced code blocks do not create section coverage. Content under
+deeper grouping headings belongs to the nearest matching semantic parent (for
+example, `### Basic` content beneath `## Examples`) until a heading at the same
+or a higher level begins. Fenced pseudo-headings never change that hierarchy.
 
 Risk checks inspect prose outside fenced code blocks. Closing fences must use
 the opening marker and be at least as long, following Markdown fence rules. A

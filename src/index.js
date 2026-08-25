@@ -113,7 +113,7 @@ export function auditSkillMarkdown(markdown, options = {}) {
 function parseMarkdownSections(markdown) {
   const lines = markdown.split(/\r?\n/);
   const sections = [];
-  let current = null;
+  const activeSections = [];
   let fence = null;
 
   for (let index = 0; index < lines.length; index += 1) {
@@ -121,27 +121,31 @@ function parseMarkdownSections(markdown) {
     const nextFence = matchFence(line, fence);
     if (nextFence.matched) {
       fence = nextFence.fence;
-      if (current) current.content.push(line);
+      for (const section of activeSections) section.content.push(line);
       continue;
     }
     if (fence) {
-      if (current) current.content.push(line);
+      for (const section of activeSections) section.content.push(line);
       continue;
     }
 
-    const atx = line.match(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/);
-    const setext =
-      index + 1 < lines.length && /^\s{0,3}(?:=+|-+)\s*$/.test(lines[index + 1])
-        ? line.trim()
+    const atx = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
+    const setextMarker =
+      index + 1 < lines.length
+        ? lines[index + 1].match(/^\s{0,3}(=+|-+)\s*$/)
         : null;
-    const heading = atx?.[1]?.trim() ?? setext;
+    const setext = setextMarker ? line.trim() : null;
+    const heading = atx?.[2]?.trim() ?? setext;
+    const level = atx?.[1].length ?? (setextMarker?.[1][0] === "=" ? 1 : 2);
 
     if (heading) {
-      current = { heading, content: [] };
-      sections.push(current);
+      while (activeSections.at(-1)?.level >= level) activeSections.pop();
+      const section = { heading, level, content: [] };
+      sections.push(section);
+      activeSections.push(section);
       if (setext) index += 1;
-    } else if (current) {
-      current.content.push(line);
+    } else {
+      for (const section of activeSections) section.content.push(line);
     }
   }
 
