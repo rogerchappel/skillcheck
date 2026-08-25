@@ -80,6 +80,48 @@ test("recognizes ATX and setext heading variants without treating prohibitions a
   assert.equal(report.findings.length, 0);
 });
 
+test("attributes nested grouping content to the nearest semantic parent section", () => {
+  const examples = auditSkillMarkdown([
+    "## Examples",
+    "### Basic",
+    "- Run the checker."
+  ].join("\n"));
+  assert.equal(examples.coverage.find(({ id }) => id === "examples").matched, true);
+
+  const validation = auditSkillMarkdown([
+    "## Validation",
+    "### Automated checks",
+    "#### Package smoke",
+    "Run the packed-package consumer test."
+  ].join("\n"));
+  assert.equal(validation.coverage.find(({ id }) => id === "validation").matched, true);
+});
+
+test("ends semantic parent inheritance at same-or-higher-level headings", () => {
+  const report = auditSkillMarkdown([
+    "## Examples",
+    "### Basic",
+    "## Notes",
+    "Content outside the examples section."
+  ].join("\n"));
+
+  assert.equal(report.coverage.find(({ id }) => id === "examples").matched, false);
+});
+
+test("CLI accepts nested content under a semantic coverage heading", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "test/fixtures/pass/nested-coverage.md"],
+    {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /^PASS .* score=100\/80/m);
+});
+
 test("still detects affirmative external actions in structured sections", () => {
   const markdown = [
     "## External Actions",
