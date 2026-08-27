@@ -166,6 +166,36 @@ test("distinguishes prohibited and affirmative actions in mixed prose", () => {
   }
 });
 
+test("recognizes gerund external actions while preserving prohibitions", () => {
+  const risky = [
+    "Publishing reports to Slack. No approval is required.",
+    "Uploading artifacts to GitHub without asking the user for permission.",
+    "Deleting remote records is supported.",
+    "Writing updates to Notion requires no approval."
+  ];
+  const boundaries = [
+    "This skill does not support publishing reports to Slack.",
+    "Never uploading artifacts to GitHub is a hard boundary.",
+    "Do not use this skill for deleting remote records or writing to Notion."
+  ];
+
+  for (const wording of risky) {
+    const report = auditSkillMarkdown(wording);
+    assert.ok(
+      report.findings.some((finding) => finding.rule === "risk-approval"),
+      wording
+    );
+  }
+  for (const wording of boundaries) {
+    const report = auditSkillMarkdown(wording);
+    assert.equal(
+      report.findings.some((finding) => finding.rule === "risk-approval"),
+      false,
+      wording
+    );
+  }
+});
+
 test("ignores headings and risk keywords inside longer backtick fences", () => {
   const markdown = [
     "````markdown",
@@ -263,6 +293,20 @@ test("CLI rejects an affirmative action following a prohibition", () => {
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /^FAIL .* score=100\/80/m);
   assert.match(result.stdout, /Potential external write, live account behavior/);
+  assert.match(result.stdout, /ERROR risk-approval/);
+});
+
+test("CLI rejects gerund publishing with a negated approval requirement", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "test/fixtures/fail/gerund-action.md"],
+    {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 1);
   assert.match(result.stdout, /ERROR risk-approval/);
 });
 
