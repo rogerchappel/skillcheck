@@ -41,7 +41,8 @@ or marks it read-only or local-only is treated as a boundary, not affirmative
 external behavior. In mixed statements, punctuation, explicit contrasts, and
 independent action clauses are evaluated separately, so `does not modify local
 files and posts updates to Slack` still identifies the Slack post.
-Affirmative external actions, including posting to named services, require
+Affirmative external actions, including base and progressive wording such as
+`publish`, `posting`, `uploading`, `deleting`, and `writing`, require
 affirmative approval language such as “ask the user before publishing,” plus
 dry-run or local-first language. Waivers such as “no approval is required” and
 “publish without asking the user” do not satisfy the approval risk check.
