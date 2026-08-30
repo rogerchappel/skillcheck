@@ -11,6 +11,16 @@ test("passes a complete skill with safety and validation coverage", async () => 
   assert.equal(report.findings.length, 0);
 });
 
+test("ships a canonical skill with complete supported coverage", async () => {
+  const markdown = await readFile(new URL("../SKILL.md", import.meta.url), "utf8");
+  const report = auditSkillMarkdown(markdown, { path: "SKILL.md" });
+
+  assert.equal(report.passed, true);
+  assert.deepEqual(report.findings, []);
+  assert.equal(report.score, 100);
+  assert.ok(report.coverage.every((item) => item.matched));
+});
+
 test("fails when major skill sections are missing", async () => {
   const markdown = await readFile(new URL("./fixtures/fail/SKILL.md", import.meta.url), "utf8");
   const report = auditSkillMarkdown(markdown);
