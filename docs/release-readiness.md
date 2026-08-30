@@ -15,7 +15,8 @@ Use this checklist before publishing, tagging, or asking reviewers to trust a
 
 - `npm run check`: syntax-checks the CLI and library entrypoint.
 - `npm test`: runs the fixture-backed Node test suite.
-- `npm run smoke`: audits the passing fixture through the CLI.
+- `npm run smoke`: audits the shipped canonical skill and the passing fixture
+  through the CLI.
 - `npm run package:smoke`: dry-runs `npm pack` and asserts required release
   files are present.
 - `npm run release:check`: runs the full release gate used by CI.
