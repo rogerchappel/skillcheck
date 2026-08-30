@@ -1,5 +1,7 @@
 # skillcheck
 
+## When to Use
+
 Use this skill when an agent needs to validate one or more `SKILL.md` files before packaging, sharing, or installing them.
 
 ## Required Inputs
@@ -18,7 +20,7 @@ Use this skill when an agent needs to validate one or more `SKILL.md` files befo
 
 ## Approval Requirements
 
-No approval is needed for local reads. Ask the user before combining this with any workflow that edits, installs, publishes, or sends skill content externally.
+No approval is needed for local reads. Keep validation local-first and ask the user before combining it with any workflow that edits, installs, publishes, or sends skill content externally.
 
 ## Examples
 
