@@ -5,7 +5,7 @@ Thanks for helping improve `skillcheck`.
 ## Development
 
 ```sh
-npm install
+npm ci
 npm run check
 npm test
 npm run smoke
