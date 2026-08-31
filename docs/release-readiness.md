@@ -17,8 +17,9 @@ Use this checklist before publishing, tagging, or asking reviewers to trust a
 - `npm test`: runs the fixture-backed Node test suite.
 - `npm run smoke`: audits the shipped canonical skill and the passing fixture
   through the CLI.
-- `npm run package:smoke`: dry-runs `npm pack` and asserts required release
-  files are present.
+- `npm run package:smoke`: builds the real tarball, asserts required release
+  files, installs it in an isolated consumer, and exercises the installed CLI
+  and public API.
 - `npm run release:check`: runs the full release gate used by CI.
 
 ## Reviewer Notes

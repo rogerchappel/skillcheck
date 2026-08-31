@@ -5,7 +5,7 @@
 ## Quickstart
 
 ```bash
-npm install
+npm ci
 npm test
 node bin/skillcheck.js SKILL.md
 ```
