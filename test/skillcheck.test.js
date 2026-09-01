@@ -176,6 +176,36 @@ test("distinguishes prohibited and affirmative actions in mixed prose", () => {
   }
 });
 
+test("separates coordinated affirmative actions from earlier prohibitions", () => {
+  const risky = [
+    "This skill does not delete files or uploads them to Slack.",
+    "This skill does not delete files and posting updates to Slack is supported.",
+    "This skill does not delete files or then upload them to GitHub.",
+    "This skill does not delete files and then publishes a summary to Notion."
+  ];
+  const prohibited = [
+    "This skill does not delete or upload files.",
+    "This skill never sends, publishes, or uploads reports to Slack.",
+    "This skill does not support deleting files or uploading reports to GitHub."
+  ];
+
+  for (const wording of risky) {
+    const report = auditSkillMarkdown(`${wording} No approval is required.`);
+    assert.ok(
+      report.findings.some((finding) => finding.rule === "risk-approval"),
+      wording
+    );
+  }
+  for (const wording of prohibited) {
+    const report = auditSkillMarkdown(`${wording} No approval is required.`);
+    assert.equal(
+      report.findings.some((finding) => finding.rule === "risk-approval"),
+      false,
+      wording
+    );
+  }
+});
+
 test("recognizes gerund external actions while preserving prohibitions", () => {
   const risky = [
     "Publishing reports to Slack. No approval is required.",
@@ -303,6 +333,21 @@ test("CLI rejects an affirmative action following a prohibition", () => {
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /^FAIL .* score=100\/80/m);
   assert.match(result.stdout, /Potential external write, live account behavior/);
+  assert.match(result.stdout, /ERROR risk-approval/);
+});
+
+test("CLI rejects an or-coordinated action following a prohibition", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "test/fixtures/fail/coordinated-action.md"],
+    {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^FAIL .* score=100\/80/m);
   assert.match(result.stdout, /ERROR risk-approval/);
 });
 
