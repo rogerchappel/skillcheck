@@ -40,7 +40,11 @@ clause that explicitly prohibits an action (`does not publish`, `never modify`)
 or marks it read-only or local-only is treated as a boundary, not affirmative
 external behavior. In mixed statements, punctuation, explicit contrasts, and
 independent action clauses are evaluated separately, so `does not modify local
-files and posts updates to Slack` still identifies the Slack post.
+files and posts updates to Slack` and `does not delete files or uploads them to
+Slack` still identify the affirmative Slack action. Fully prohibited lists such
+as `does not delete or upload files` remain boundaries. A subjectless base verb
+is treated independently when `then` makes the sequence explicit, as in `does
+not delete files and then publish the report`.
 Affirmative external actions, including base and progressive wording such as
 `publish`, `posting`, `uploading`, `deleting`, and `writing`, require
 affirmative approval language such as “ask the user before publishing,” plus
