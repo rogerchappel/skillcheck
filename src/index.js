@@ -56,7 +56,9 @@ const CREDENTIAL = /\b(?:credentials?|secrets?|tokens?)\b/i;
 const PROHIBITION =
   /\b(?:do|does|will|must|should|can|may)\s+not\b|\bnever\b|\b(?:read|local)[- ]only\b/i;
 const INDEPENDENT_ACTION_CLAUSE =
-  /\band\s+(?=(?:then\s+)?(?:(?:it|this skill|the skill|the tool|we|you)\s+)?(?:sending|publishing|posting|uploading|deleting|writing|modifying|accessing|sends|publishes|posts|uploads|deletes|writes|modifies|accesses)\b)|\bor\s+(?=(?:then\s+(?:(?:it|this skill|the skill|the tool|we|you)\s+)?|(?:it|this skill|the skill|the tool|we|you)\s+)(?:sending|publishing|posting|uploading|deleting|writing|modifying|accessing|sends|publishes|posts|uploads|deletes|writes|modifies|accesses)\b)/i;
+  /\b(?:and|or)\s+(?=(?:(?:it|this skill|the skill|the tool|we|you)\s+)?(?:sending|publishing|posting|uploading|deleting|writing|modifying|accessing|sends|publishes|posts|uploads|deletes|writes|modifies|accesses)\b|then\s+(?:(?:it|this skill|the skill|the tool|we|you)\s+)?(?:send|publish|post|upload|delete|write|modify|access|sending|publishing|posting|uploading|deleting|writing|modifying|accessing|sends|publishes|posts|uploads|deletes|writes|modifies|accesses)\b)/i;
+const PROHIBITED_ACTION_LIST =
+  /\bnever\b[^.!?;:]*(?:,\s*[^.!?;:]*)+\b(?:and|or)\b|\b(?:do|does)\s+not\b[^.!?;:]*\b(?:support|use)\b/i;
 const APPROVAL_NEGATION =
   /\bno\s+(?:user\s+)?(?:approval|confirmation|permission)\b|\b(?:approval|confirmation|permission)\s+(?:is\s+)?not\s+(?:needed|required)\b|\bwithout\s+(?:asking|obtaining|requesting|receiving|seeking)?\s*(?:the\s+)?(?:user(?:'s)?\s+)?(?:approval|confirmation|permission)\b|\b(?:do|does|must|should|need)\s+not\s+(?:ask|confirm|obtain|request|seek)\b/i;
 const AFFIRMATIVE_APPROVAL = [
@@ -233,7 +235,11 @@ function detectRisks(markdown) {
 function splitRiskClauses(line) {
   return line
     .split(/[.!?;:]+|\b(?:but|however|except)\b|,\s*(?=then\b)/i)
-    .flatMap((clause) => clause.split(INDEPENDENT_ACTION_CLAUSE))
+    .flatMap((clause) =>
+      PROHIBITED_ACTION_LIST.test(clause)
+        ? [clause]
+        : clause.split(INDEPENDENT_ACTION_CLAUSE)
+    )
     .map((clause) => clause.trim())
     .filter(Boolean);
 }
