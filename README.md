@@ -46,7 +46,8 @@ as `does not delete or upload files` remain boundaries. A subjectless base verb
 is treated independently when `then` makes the sequence explicit, as in `does
 not delete files and then publish the report`.
 Affirmative external actions, including base and progressive wording such as
-`publish`, `posting`, `uploading`, `deleting`, and `writing`, require
+`publish`, `posting`, `uploading`, `deleting`, `writing`, `deploying`, and
+`merging`, require
 affirmative approval language such as “ask the user before publishing,” plus
 dry-run or local-first language. Waivers such as “no approval is required” and
 “publish without asking the user” do not satisfy the approval risk check.

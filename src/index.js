@@ -50,13 +50,13 @@ const REQUIRED_COVERAGE = [
 ];
 
 const EXTERNAL_ACTION =
-  /\b(?:send(?:s|ing)?|publish(?:es|ing)?|post(?:s|ing)?|upload(?:s|ing)?|delet(?:e|es|ing)|writ(?:e|es|ing)|modif(?:y|ies|ying)|access(?:es|ing)?)\b/i;
+  /\b(?:send(?:s|ing)?|publish(?:es|ing)?|post(?:s|ing)?|upload(?:s|ing)?|delet(?:e|es|ing)|writ(?:e|es|ing)|modif(?:y|ies|ying)|access(?:es|ing)?|deploy(?:s|ing)?|merg(?:e|es|ing))\b/i;
 const LIVE_ACCOUNT = /\b(?:accounts?|crm|slack|github|notion|salesforce|linear)\b/i;
 const CREDENTIAL = /\b(?:credentials?|secrets?|tokens?)\b/i;
 const PROHIBITION =
   /\b(?:do|does|will|must|should|can|may)\s+not\b|\bnever\b|\b(?:read|local)[- ]only\b/i;
 const INDEPENDENT_ACTION_CLAUSE =
-  /\b(?:and|or)\s+(?=(?:(?:it|this skill|the skill|the tool|we|you)\s+)?(?:sending|publishing|posting|uploading|deleting|writing|modifying|accessing|sends|publishes|posts|uploads|deletes|writes|modifies|accesses)\b|then\s+(?:(?:it|this skill|the skill|the tool|we|you)\s+)?(?:send|publish|post|upload|delete|write|modify|access|sending|publishing|posting|uploading|deleting|writing|modifying|accessing|sends|publishes|posts|uploads|deletes|writes|modifies|accesses)\b)/i;
+  /\b(?:and|or)\s+(?=(?:(?:it|this skill|the skill|the tool|we|you)\s+)?(?:sending|publishing|posting|uploading|deleting|writing|modifying|accessing|deploying|merging|sends|publishes|posts|uploads|deletes|writes|modifies|accesses|deploys|merges)\b|then\s+(?:(?:it|this skill|the skill|the tool|we|you)\s+)?(?:send|publish|post|upload|delete|write|modify|access|deploy|merge|sending|publishing|posting|uploading|deleting|writing|modifying|accessing|deploying|merging|sends|publishes|posts|uploads|deletes|writes|modifies|accesses|deploys|merges)\b)/i;
 const PROHIBITED_ACTION_LIST =
   /\bnever\b[^.!?;:]*(?:,\s*[^.!?;:]*)+\b(?:and|or)\b|\b(?:do|does)\s+not\b[^.!?;:]*\b(?:support|use)\b/i;
 const APPROVAL_NEGATION =

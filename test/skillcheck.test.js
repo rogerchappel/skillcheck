@@ -236,6 +236,30 @@ test("recognizes gerund external actions while preserving prohibitions", () => {
   }
 });
 
+test("recognizes deploy and merge forms while preserving explicit prohibitions", () => {
+  const risky = [
+    "Deploy releases to GitHub. No approval is required.",
+    "Deploying releases to GitHub without approval.",
+    "This skill deploys releases to GitHub.",
+    "Merge pull requests on GitHub. No approval is required.",
+    "Merging pull requests on GitHub without approval.",
+    "This skill merges pull requests on GitHub."
+  ];
+  for (const wording of risky) {
+    const report = auditSkillMarkdown(wording);
+    assert.ok(report.findings.some(({ rule }) => rule === "risk-approval"), wording);
+    assert.ok(report.findings.some(({ rule }) => rule === "risk-dry-run"), wording);
+  }
+
+  const approved = auditSkillMarkdown(
+    "Ask the user for approval before deploying releases and merging pull requests on GitHub. Preview the plan locally first."
+  );
+  assert.equal(approved.findings.some(({ rule }) => rule.startsWith("risk-")), false);
+
+  const prohibited = auditSkillMarkdown("Never deploy or merge pull requests on GitHub.");
+  assert.equal(prohibited.findings.some(({ rule }) => rule.startsWith("risk-")), false);
+});
+
 test("ignores headings and risk keywords inside longer backtick fences", () => {
   const markdown = [
     "````markdown",
@@ -363,6 +387,18 @@ test("CLI rejects gerund publishing with a negated approval requirement", () => 
 
   assert.equal(result.status, 1);
   assert.match(result.stdout, /ERROR risk-approval/);
+});
+
+test("CLI rejects deploy and merge without approval or dry-run boundaries", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "test/fixtures/fail/deploy-merge-action.md"],
+    { cwd: new URL("..", import.meta.url), encoding: "utf8" }
+  );
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /ERROR risk-approval/);
+  assert.match(result.stdout, /WARN risk-dry-run/);
 });
 
 test("formats text output for CLI users", async () => {
