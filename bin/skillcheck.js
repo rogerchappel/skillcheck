@@ -14,6 +14,15 @@ async function main(argv) {
   const paths = [];
   let json = false;
   let minScore = 80;
+  const helpArguments = argv.filter((arg) => arg === "--help" || arg === "-h");
+
+  if (helpArguments.length > 0) {
+    if (argv.length !== 1) {
+      throw new Error("help cannot be combined with paths or options");
+    }
+    console.log(usage());
+    return 0;
+  }
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -26,9 +35,6 @@ async function main(argv) {
       if (!/^\d+$/.test(raw ?? "") || minScore < 0 || minScore > 100) {
         throw new Error("--min-score expects an integer from 0 to 100");
       }
-    } else if (arg === "--help" || arg === "-h") {
-      console.log(usage());
-      return 0;
     } else if (arg.startsWith("-")) {
       throw new Error(`unknown option: ${arg}`);
     } else {
