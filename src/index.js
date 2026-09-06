@@ -136,7 +136,7 @@ function parseMarkdownSections(markdown) {
       index + 1 < lines.length
         ? lines[index + 1].match(/^\s{0,3}(=+|-+)\s*$/)
         : null;
-    const setext = setextMarker ? line.trim() : null;
+    const setext = setextMarker && !/^(?: {4}|\t)/.test(line) ? line.trim() : null;
     const heading = atx?.[2]?.trim() ?? setext;
     const level = atx?.[1].length ?? (setextMarker?.[1][0] === "=" ? 1 : 2);
 
