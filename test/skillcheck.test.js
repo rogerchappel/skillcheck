@@ -90,6 +90,20 @@ test("recognizes ATX and setext heading variants without treating prohibitions a
   assert.equal(report.findings.length, 0);
 });
 
+test("does not treat indented code as setext heading text", () => {
+  for (const indentation of ["    ", "\t"]) {
+    const report = auditSkillMarkdown([
+      "# Probe",
+      "",
+      `${indentation}Tools`,
+      "---",
+      `${indentation}Run the local checker.`
+    ].join("\n"));
+
+    assert.equal(report.coverage.find(({ id }) => id === "tools").matched, false);
+  }
+});
+
 test("attributes nested grouping content to the nearest semantic parent section", () => {
   const examples = auditSkillMarkdown([
     "## Examples",
@@ -329,6 +343,21 @@ test("CLI accepts explicit safe boundaries under recognized heading variants", (
   assert.match(result.stdout, /no findings/);
 });
 
+test("CLI rejects indented code posing as a setext coverage section", () => {
+  const result = spawnSync(
+    process.execPath,
+    ["bin/skillcheck.js", "--min-score", "100", "test/fixtures/fail/indented-setext.md"],
+    {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^FAIL .* score=90\/100/m);
+  assert.match(result.stdout, /Missing coverage for Required tools/);
+});
+
 test("CLI rejects external publishing with a negated approval requirement", () => {
   const result = spawnSync(
     process.execPath,
@@ -417,6 +446,28 @@ test("CLI rejects unknown options instead of treating them as paths", () => {
   assert.equal(result.status, 2);
   assert.match(result.stderr, /unknown option: --jsoon/);
   assert.doesNotMatch(result.stderr, /ENOENT/);
+});
+
+test("CLI accepts help alone and rejects help combined with other arguments", () => {
+  for (const help of ["--help", "-h"]) {
+    const alone = spawnSync(process.execPath, ["bin/skillcheck.js", help], {
+      cwd: new URL("..", import.meta.url),
+      encoding: "utf8"
+    });
+    assert.equal(alone.status, 0, help);
+    assert.match(alone.stdout, /^Usage: skillcheck/);
+    assert.equal(alone.stderr, "");
+
+    for (const args of [[help, "SKILL.md"], ["--json", help]]) {
+      const combined = spawnSync(process.execPath, ["bin/skillcheck.js", ...args], {
+        cwd: new URL("..", import.meta.url),
+        encoding: "utf8"
+      });
+      assert.equal(combined.status, 2, args.join(" "));
+      assert.equal(combined.stdout, "");
+      assert.match(combined.stderr, /help cannot be combined with paths or options/);
+    }
+  }
 });
 
 test("CLI rejects thresholds outside the score range", () => {
